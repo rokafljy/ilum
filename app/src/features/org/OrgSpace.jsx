@@ -79,6 +79,20 @@ export default function OrgSpace() {
     return <Navigate to={roles?.superAdmin ? "/console" : "/go"} replace />;
   }
 
+  // 이용 정지된 기관 — 운영사 열람은 허용
+  if (org.status === "suspended" && !org.consoleView) {
+    return (
+      <div className="min-h-dvh grid place-items-center px-6">
+        <div className="text-center">
+          <div className="text-4xl mb-3">⏸️</div>
+          <p className="font-bold text-ink-900">기관 이용이 일시 정지됐어요</p>
+          <p className="mt-1 text-sm text-ink-500">운영사에 문의해 주세요.</p>
+          <Button variant="secondary" size="sm" className="mt-5" onClick={signOut}>로그아웃</Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <OrgCtx.Provider value={{ org, programs: programs ?? [], program, setProgramId }}>
       <div className="min-h-dvh flex flex-col">

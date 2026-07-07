@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "../../lib/supabase.js";
 import { useOrg } from "./OrgSpace.jsx";
 import { DEFAULT_PROGRAM_SETTINGS, PROGRAM_TYPES } from "../../lib/programDefaults.js";
+import { ProgramSettingsModal } from "./ProgramSettingsModal.jsx";
 import {
   Badge, Button, Card, CodeChip, CopyButton, EmptyState, Field, Input, Modal, Select,
 } from "../../components/ui/index.jsx";
@@ -14,6 +15,7 @@ export default function ProgramsPage() {
   const qc = useQueryClient();
 
   const [open, setOpen] = useState(false);
+  const [settingsFor, setSettingsFor] = useState(null);
   const [form, setForm] = useState({
     name: "",
     year: new Date().getFullYear(),
@@ -82,6 +84,9 @@ export default function ProgramsPage() {
                 {p.year ?? "-"}년 · {p.type}
                 {p.start_date && ` · ${p.start_date} 시작`}
               </span>
+              <Button variant="secondary" size="sm" className="ml-auto" onClick={() => setSettingsFor(p)}>
+                ⚙️ 설정
+              </Button>
             </div>
             <div className="mt-3 flex items-center gap-2 text-sm text-ink-700">
               <span className="text-[13px] font-semibold text-ink-500">팀 모집 참여코드</span>
@@ -116,6 +121,10 @@ export default function ProgramsPage() {
           </Card>
         ))}
       </div>
+
+      {settingsFor && (
+        <ProgramSettingsModal program={settingsFor} orgId={org.id} onClose={() => setSettingsFor(null)} />
+      )}
 
       <Modal
         open={open}

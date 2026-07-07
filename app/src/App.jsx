@@ -1,33 +1,45 @@
+import { lazy, Suspense } from "react";
 import { Routes, Route } from "react-router-dom";
 import Landing from "./pages/Landing.jsx";
-import Welcome from "./pages/Welcome.jsx";
-import SignupPage from "./pages/SignupPage.jsx";
-import InvitePage from "./pages/InvitePage.jsx";
-import JoinPage from "./pages/JoinPage.jsx";
 import LoginPage from "./features/auth/LoginPage.jsx";
-import ConsolePage from "./features/console/ConsolePage.jsx";
-import OrgSpace from "./features/org/OrgSpace.jsx";
-import OrgHome from "./features/org/OrgHome.jsx";
-import ProgramsPage from "./features/org/ProgramsPage.jsx";
-import TeamsPage from "./features/org/TeamsPage.jsx";
-import ApprovalsPage from "./features/org/ApprovalsPage.jsx";
-import ActivityPage from "./features/org/ActivityPage.jsx";
-import CommPage from "./features/org/CommPage.jsx";
-import QnaPage from "./features/team/QnaPage.jsx";
-import SchedulePage from "./features/team/SchedulePage.jsx";
-import TeamSpace from "./features/team/TeamSpace.jsx";
-import TeamHome from "./features/team/TeamHome.jsx";
-import RequestsPage from "./features/team/RequestsPage.jsx";
-import MeetingsPage from "./features/team/MeetingsPage.jsx";
-import MentoringPage from "./features/team/MentoringPage.jsx";
-import ExpenseReportsPage from "./features/team/ExpenseReportsPage.jsx";
 import { AuthProvider } from "./features/auth/AuthProvider.jsx";
 import { RequireAuth, RequireSpace, RoleRedirect } from "./features/auth/guards.jsx";
-import { EmptyState } from "./components/ui/index.jsx";
+import { EmptyState, Spinner } from "./components/ui/index.jsx";
+
+/* 공간별 코드 분할 — 첫 로드는 랜딩·로그인만 */
+const Welcome = lazy(() => import("./pages/Welcome.jsx"));
+const SignupPage = lazy(() => import("./pages/SignupPage.jsx"));
+const InvitePage = lazy(() => import("./pages/InvitePage.jsx"));
+const JoinPage = lazy(() => import("./pages/JoinPage.jsx"));
+const ConsolePage = lazy(() => import("./features/console/ConsolePage.jsx"));
+const OrgSpace = lazy(() => import("./features/org/OrgSpace.jsx"));
+const OrgHome = lazy(() => import("./features/org/OrgHome.jsx"));
+const ProgramsPage = lazy(() => import("./features/org/ProgramsPage.jsx"));
+const TeamsPage = lazy(() => import("./features/org/TeamsPage.jsx"));
+const ApprovalsPage = lazy(() => import("./features/org/ApprovalsPage.jsx"));
+const ActivityPage = lazy(() => import("./features/org/ActivityPage.jsx"));
+const CommPage = lazy(() => import("./features/org/CommPage.jsx"));
+const TeamSpace = lazy(() => import("./features/team/TeamSpace.jsx"));
+const TeamHome = lazy(() => import("./features/team/TeamHome.jsx"));
+const RequestsPage = lazy(() => import("./features/team/RequestsPage.jsx"));
+const MeetingsPage = lazy(() => import("./features/team/MeetingsPage.jsx"));
+const MentoringPage = lazy(() => import("./features/team/MentoringPage.jsx"));
+const ExpenseReportsPage = lazy(() => import("./features/team/ExpenseReportsPage.jsx"));
+const QnaPage = lazy(() => import("./features/team/QnaPage.jsx"));
+const SchedulePage = lazy(() => import("./features/team/SchedulePage.jsx"));
+
+function PageLoading() {
+  return (
+    <div className="min-h-dvh grid place-items-center">
+      <Spinner className="size-8" />
+    </div>
+  );
+}
 
 export default function App() {
   return (
     <AuthProvider>
+      <Suspense fallback={<PageLoading />}>
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={<LoginPage />} />
@@ -109,6 +121,7 @@ export default function App() {
           }
         />
       </Routes>
+      </Suspense>
     </AuthProvider>
   );
 }

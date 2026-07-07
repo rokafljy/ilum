@@ -2,11 +2,28 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "../../lib/supabase.js";
 import { useOrg } from "./OrgSpace.jsx";
-import { DOC_TYPES, DOC_STATUS } from "../../lib/docs.js";
+import { DOC_TYPES, DOC_STATUS, listDocs } from "../../lib/docs.js";
 import { fmtDate } from "../../lib/format.js";
 import { DocDetail } from "../../components/DocDetail.jsx";
-import { Badge, Card, EmptyState, Modal, Select, Spinner } from "../../components/ui/index.jsx";
+import { Badge, Button, Card, EmptyState, Modal, Select, Spinner } from "../../components/ui/index.jsx";
 import { cn } from "../../lib/cn.js";
+
+/** PDF 메타(팀장·확인자 등) 구성 */
+async function buildMeta(teamId, org, program) {
+  const { data: team } = await supabase
+    .from("teams")
+    .select("name, team_members(role, profiles(name))")
+    .eq("id", teamId)
+    .single();
+  const leader = team?.team_members?.find((m) => m.role === "leader");
+  return {
+    orgName: org.name,
+    programName: program.name,
+    teamName: team?.name ?? "",
+    leaderName: leader?.profiles?.name ?? "",
+    checkerName: org.checker_name || org.name,
+  };
+}
 
 const TABS = [
   { key: "meeting", label: "회의록" },
@@ -17,10 +34,42 @@ const TABS = [
 
 /** 활동 관리 — 사업 전체 문서 조회 (팀·유형 필터) */
 export default function ActivityPage() {
-  const { program } = useOrg();
+  const { org, program } = useOrg();
   const [tab, setTab] = useState("meeting");
   const [teamFilter, setTeamFilter] = useState("");
   const [viewing, setViewing] = useState(null);
+  const [pdfBusy, setPdfBusy] = useState(false);
+  const [zipProgress, setZipProgress] = useState(null);
+
+  async function downloadPdf(doc) {
+    setPdfBusy(true);
+    try {
+      const { saveDocPdf } = await import("../../lib/pdf.js"); // PDF 스택은 필요할 때만 로드
+      const meta = await buildMeta(doc.team_id, org, program);
+      await saveDocPdf(doc, meta);
+    } catch {
+      alert("PDF 생성에 실패했어요.");
+    } finally {
+      setPdfBusy(false);
+    }
+  }
+
+  async function downloadTeamZip() {
+    setZipProgress("준비 중…");
+    try {
+      const all = await listDocs({ teamId: teamFilter });
+      // 멘토링 일지는 승인 절차가 없어 draft 상태 그대로 포함
+      const targets = all.filter((d) => d.doc_type === "mentoring" || d.status !== "draft");
+      if (!targets.length) return alert("다운로드할 문서가 없어요.");
+      const { saveTeamZip } = await import("../../lib/pdf.js");
+      const meta = await buildMeta(teamFilter, org, program);
+      await saveTeamZip(targets, meta, (i, n) => setZipProgress(`${i}/${n} 생성 중…`));
+    } catch {
+      alert("일괄 PDF 생성에 실패했어요.");
+    } finally {
+      setZipProgress(null);
+    }
+  }
 
   const { data: teams } = useQuery({
     queryKey: ["org-team-options", program?.id],
@@ -82,6 +131,11 @@ export default function ActivityPage() {
           <option value="">전체 팀</option>
           {(teams ?? []).map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
         </Select>
+        {teamFilter && (
+          <Button variant="secondary" size="sm" disabled={Boolean(zipProgress)} onClick={downloadTeamZip}>
+            {zipProgress ?? "📦 팀 서류 일괄 PDF"}
+          </Button>
+        )}
       </div>
 
       {isLoading ? (
@@ -109,7 +163,15 @@ export default function ActivityPage() {
       )}
 
       {viewing && (
-        <Modal open onClose={() => setViewing(null)} title={`${viewing.teams?.name} — ${viewing.title}`}>
+        <Modal
+          open onClose={() => setViewing(null)}
+          title={`${viewing.teams?.name} — ${viewing.title}`}
+          footer={
+            <Button variant="secondary" disabled={pdfBusy} onClick={() => downloadPdf(viewing)}>
+              {pdfBusy ? "생성 중…" : "📄 PDF 저장"}
+            </Button>
+          }
+        >
           <DocDetail doc={viewing} />
         </Modal>
       )}

@@ -10,17 +10,27 @@ import {
 async function fetchOrgs() {
   const { data, error } = await supabase
     .from("orgs")
-    .select("id, name, status, created_at, org_members(count), programs(count)")
+    .select("id, name, status, created_at, org_members(count), programs(count), teams(count)")
     .order("created_at", { ascending: false });
   if (error) throw error;
   return data;
+}
+
+async function fetchTotals() {
+  const [teams, docs] = await Promise.all([
+    supabase.from("teams").select("id", { count: "exact", head: true }).eq("status", "active"),
+    supabase.from("documents").select("id", { count: "exact", head: true }).neq("status", "draft"),
+  ]);
+  return { activeTeams: teams.count ?? 0, docs: docs.count ?? 0 };
 }
 
 export default function ConsolePage() {
   const qc = useQueryClient();
   const navigate = useNavigate();
   const { data: orgs, isLoading } = useQuery({ queryKey: ["console-orgs"], queryFn: fetchOrgs });
+  const { data: totals } = useQuery({ queryKey: ["console-totals"], queryFn: fetchTotals });
 
+  const [search, setSearch] = useState("");
   const [createOpen, setCreateOpen] = useState(false);
   const [orgName, setOrgName] = useState("");
   const [inviteFor, setInviteFor] = useState(null); // 초대 대상 org
@@ -40,6 +50,15 @@ export default function ConsolePage() {
       setOrgName("");
       setInviteFor(org); // 생성 직후 바로 관리자 초대로 유도
     },
+  });
+
+  const toggleOrgStatus = useMutation({
+    mutationFn: async (org) => {
+      const next = org.status === "active" ? "suspended" : "active";
+      const { error } = await supabase.from("orgs").update({ status: next }).eq("id", org.id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["console-orgs"] }),
   });
 
   const createInvite = useMutation({
@@ -66,15 +85,34 @@ export default function ConsolePage() {
       </header>
 
       <main className="flex-1 max-w-4xl w-full mx-auto px-5 py-8">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-bold text-ink-900">운영기관</h1>
-            <p className="mt-0.5 text-sm text-ink-500">일움을 사용하는 기관을 관리합니다.</p>
-          </div>
-          <Button onClick={() => setCreateOpen(true)}>+ 기관 등록</Button>
+        {/* 전체 현황 */}
+        <div className="grid grid-cols-3 gap-3">
+          <Card className="p-4">
+            <div className="text-[13px] text-ink-500">운영기관</div>
+            <div className="mt-1 text-2xl font-extrabold text-ink-900">{orgs?.length ?? "-"}</div>
+          </Card>
+          <Card className="p-4">
+            <div className="text-[13px] text-ink-500">활동 팀</div>
+            <div className="mt-1 text-2xl font-extrabold text-brand-700">{totals?.activeTeams ?? "-"}</div>
+          </Card>
+          <Card className="p-4">
+            <div className="text-[13px] text-ink-500">누적 문서</div>
+            <div className="mt-1 text-2xl font-extrabold text-ink-900">{totals?.docs ?? "-"}</div>
+          </Card>
         </div>
 
-        <div className="mt-6 space-y-3">
+        <div className="mt-8 flex items-center justify-between gap-3 flex-wrap">
+          <div>
+            <h1 className="text-xl font-bold text-ink-900">운영기관</h1>
+            <p className="mt-0.5 text-sm text-ink-500">기관을 클릭하면 운영 현황을 볼 수 있어요.</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Input className="!h-10 !w-48" placeholder="기관 검색" value={search} onChange={(e) => setSearch(e.target.value)} />
+            <Button onClick={() => setCreateOpen(true)}>+ 기관 등록</Button>
+          </div>
+        </div>
+
+        <div className="mt-4 space-y-3">
           {isLoading && (
             <div className="py-16 grid place-items-center">
               <Spinner />
@@ -89,7 +127,7 @@ export default function ConsolePage() {
               />
             </Card>
           )}
-          {orgs?.map((org) => (
+          {orgs?.filter((o) => o.name.includes(search.trim())).map((org) => (
             <Card
               key={org.id}
               className="p-5 flex items-center gap-4 cursor-pointer hover:border-brand-300 transition-colors"
@@ -109,8 +147,8 @@ export default function ConsolePage() {
                   </Badge>
                 </div>
                 <p className="mt-0.5 text-[13px] text-ink-500">
-                  구성원 {org.org_members?.[0]?.count ?? 0}명 · 사업 {org.programs?.[0]?.count ?? 0}개 ·
-                  클릭해서 현황 보기
+                  구성원 {org.org_members?.[0]?.count ?? 0}명 · 사업 {org.programs?.[0]?.count ?? 0}개 · 팀{" "}
+                  {org.teams?.[0]?.count ?? 0}개
                 </p>
               </div>
               <Button
@@ -122,6 +160,21 @@ export default function ConsolePage() {
                 }}
               >
                 담당자 초대
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className={org.status === "active" ? "text-red-600" : "text-brand-700"}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (confirm(org.status === "active"
+                    ? `${org.name}을(를) 이용 정지할까요? 소속 사용자들이 접근할 수 없게 됩니다.`
+                    : `${org.name}의 이용을 재개할까요?`)) {
+                    toggleOrgStatus.mutate(org);
+                  }
+                }}
+              >
+                {org.status === "active" ? "정지" : "재개"}
               </Button>
             </Card>
           ))}
