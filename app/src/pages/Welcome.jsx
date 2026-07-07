@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { Button, Card, Logo } from "../components/ui/index.jsx";
 import { signOut, useAuth } from "../features/auth/AuthProvider.jsx";
 
@@ -13,11 +14,14 @@ export default function Welcome() {
         <p className="mt-2 text-sm text-ink-500 leading-relaxed">
           {session?.user?.email}
           <br />
-          팀 초대코드로 참여하거나, 기관 관리자의 초대를 기다려 주세요.
+          청년 참가자라면 기관·팀장에게 받은 코드로 시작하세요.
           <br />
-          <span className="text-ink-400">(초대코드 가입은 준비 중입니다)</span>
+          기관 담당자는 초대 링크를 통해 합류할 수 있어요.
         </p>
-        <Button variant="secondary" className="mt-6 w-full" onClick={signOut}>
+        <Link to="/join" className="block mt-6">
+          <Button className="w-full">코드로 활동 시작하기</Button>
+        </Link>
+        <Button variant="secondary" className="mt-2 w-full" onClick={signOut}>
           로그아웃
         </Button>
       </Card>

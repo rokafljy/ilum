@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useState } from "react";
 import { supabase, supabaseReady } from "../../lib/supabase.js";
 
 /**
@@ -7,7 +7,25 @@ import { supabase, supabaseReady } from "../../lib/supabase.js";
  *          orgs:  [{ org_id, role, orgs:{name,status} }],
  *          teams: [{ team_id, role, teams:{name,status,org_id,program_id} }] }
  */
-const AuthCtx = createContext({ session: null, roles: null, booting: true });
+const AuthCtx = createContext({ session: null, roles: null, booting: true, refreshRoles: async () => {} });
+
+async function fetchRoles(session) {
+  if (!session) return null;
+  const uid = session.user.id;
+  const [sa, om, tm] = await Promise.all([
+    supabase.from("super_admins").select("user_id").eq("user_id", uid).maybeSingle(),
+    supabase.from("org_members").select("org_id, role, orgs(name, status)").eq("user_id", uid),
+    supabase
+      .from("team_members")
+      .select("team_id, role, teams(name, status, org_id, program_id)")
+      .eq("user_id", uid),
+  ]);
+  return {
+    superAdmin: Boolean(sa.data),
+    orgs: om.data ?? [],
+    teams: tm.data ?? [],
+  };
+}
 
 export function AuthProvider({ children }) {
   const [session, setSession] = useState(null);
@@ -26,39 +44,29 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     let alive = true;
-    async function loadRoles() {
-      if (!session) {
-        if (alive) {
-          setRoles(null);
-          setBooting(false);
-        }
-        return;
+    (async () => {
+      setBooting(true);
+      const r = await fetchRoles(session);
+      if (alive) {
+        setRoles(r);
+        setBooting(false);
       }
-      const uid = session.user.id;
-      const [sa, om, tm] = await Promise.all([
-        supabase.from("super_admins").select("user_id").eq("user_id", uid).maybeSingle(),
-        supabase.from("org_members").select("org_id, role, orgs(name, status)").eq("user_id", uid),
-        supabase
-          .from("team_members")
-          .select("team_id, role, teams(name, status, org_id, program_id)")
-          .eq("user_id", uid),
-      ]);
-      if (!alive) return;
-      setRoles({
-        superAdmin: Boolean(sa.data),
-        orgs: om.data ?? [],
-        teams: tm.data ?? [],
-      });
-      setBooting(false);
-    }
-    setBooting(true);
-    loadRoles();
+    })();
     return () => {
       alive = false;
     };
   }, [session]);
 
-  return <AuthCtx.Provider value={{ session, roles, booting }}>{children}</AuthCtx.Provider>;
+  /** 소속 변경(초대 수락·팀 등록) 직후 호출 — 완료를 기다릴 수 있음 */
+  const refreshRoles = useCallback(async () => {
+    const r = await fetchRoles(session);
+    setRoles(r);
+    return r;
+  }, [session]);
+
+  return (
+    <AuthCtx.Provider value={{ session, roles, booting, refreshRoles }}>{children}</AuthCtx.Provider>
+  );
 }
 
 export function useAuth() {

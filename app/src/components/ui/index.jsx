@@ -111,6 +111,73 @@ export function EmptyState({ icon = "🌱", title, description, action }) {
   );
 }
 
+export function Modal({ open, onClose, title, children, footer }) {
+  if (!open) return null;
+  return (
+    <div className="fixed inset-0 z-50 grid place-items-center p-4">
+      <div className="absolute inset-0 bg-ink-900/40" onClick={onClose} aria-hidden />
+      <div className="relative bg-white rounded-2xl shadow-pop w-full max-w-md p-6 max-h-[85dvh] overflow-y-auto">
+        <div className="flex items-start justify-between gap-4">
+          <h2 className="font-bold text-lg text-ink-900">{title}</h2>
+          <button
+            onClick={onClose}
+            className="text-ink-400 hover:text-ink-700 text-xl leading-none -mt-0.5"
+            aria-label="닫기"
+          >
+            ×
+          </button>
+        </div>
+        <div className="mt-4">{children}</div>
+        {footer && <div className="mt-6 flex justify-end gap-2">{footer}</div>}
+      </div>
+    </div>
+  );
+}
+
+export function Select({ className, children, ...props }) {
+  return (
+    <select
+      className={cn(
+        "w-full h-11 px-3 rounded-xl border border-ink-200 bg-white text-[15px] text-ink-900",
+        "focus:outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-100",
+        className
+      )}
+      {...props}
+    >
+      {children}
+    </select>
+  );
+}
+
+/** 복사 버튼 — 초대링크·코드 공유용 */
+export function CopyButton({ text, label = "복사" }) {
+  return (
+    <Button
+      type="button"
+      variant="secondary"
+      size="sm"
+      onClick={async (e) => {
+        await navigator.clipboard.writeText(text);
+        const el = e.currentTarget;
+        const prev = el.textContent;
+        el.textContent = "복사됨 ✓";
+        setTimeout(() => (el.textContent = prev), 1500);
+      }}
+    >
+      {label}
+    </Button>
+  );
+}
+
+/** 코드 표시 칩 — 참여코드/초대코드 */
+export function CodeChip({ code }) {
+  return (
+    <span className="inline-flex items-center gap-2 px-2.5 py-1 rounded-lg bg-ink-100 font-mono font-bold text-[13px] tracking-widest text-ink-700">
+      {code}
+    </span>
+  );
+}
+
 /** 일움 워드마크 — 새싹 점 하나로 브랜드 표현 */
 export function Logo({ className, size = "md" }) {
   const text = size === "lg" ? "text-3xl" : size === "sm" ? "text-lg" : "text-xl";
