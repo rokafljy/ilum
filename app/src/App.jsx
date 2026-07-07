@@ -12,6 +12,9 @@ import ProgramsPage from "./features/org/ProgramsPage.jsx";
 import TeamsPage from "./features/org/TeamsPage.jsx";
 import ApprovalsPage from "./features/org/ApprovalsPage.jsx";
 import ActivityPage from "./features/org/ActivityPage.jsx";
+import CommPage from "./features/org/CommPage.jsx";
+import QnaPage from "./features/team/QnaPage.jsx";
+import SchedulePage from "./features/team/SchedulePage.jsx";
 import TeamSpace from "./features/team/TeamSpace.jsx";
 import TeamHome from "./features/team/TeamHome.jsx";
 import RequestsPage from "./features/team/RequestsPage.jsx";
@@ -73,6 +76,7 @@ export default function App() {
           <Route index element={<OrgHome />} />
           <Route path="approvals" element={<ApprovalsPage />} />
           <Route path="activity" element={<ActivityPage />} />
+          <Route path="comm" element={<CommPage />} />
           <Route path="teams" element={<TeamsPage />} />
           <Route path="programs" element={<ProgramsPage />} />
         </Route>
@@ -92,6 +96,8 @@ export default function App() {
           <Route path="meetings" element={<MeetingsPage />} />
           <Route path="expenses" element={<ExpenseReportsPage />} />
           <Route path="mentoring" element={<MentoringPage />} />
+          <Route path="qna" element={<QnaPage />} />
+          <Route path="schedule" element={<SchedulePage />} />
         </Route>
 
         <Route

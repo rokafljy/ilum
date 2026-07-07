@@ -5,7 +5,7 @@ import { listDocs } from "../../lib/docs.js";
 import { fmtMoney, sumItems } from "../../lib/format.js";
 import { Badge, Card, CodeChip, CopyButton } from "../../components/ui/index.jsx";
 
-/** 팀 홈 — 예산 현황·멘토링 진도·바로가기 */
+/** 팀 홈 — 공지·예산 현황·멘토링 진도·바로가기 */
 export default function TeamHome() {
   const { team, settings } = useTeam();
   const budget = settings.teamBudget ?? 0;
@@ -14,6 +14,18 @@ export default function TeamHome() {
   const { data: docs } = useQuery({
     queryKey: ["team-home-docs", team.id],
     queryFn: () => listDocs({ teamId: team.id }),
+  });
+
+  const { data: notices } = useQuery({
+    queryKey: ["team-notices", team.program_id],
+    queryFn: async () => {
+      const { supabase } = await import("../../lib/supabase.js");
+      const { data, error } = await supabase
+        .from("notices").select("*").eq("program_id", team.program_id).eq("active", true)
+        .order("created_at", { ascending: false }).limit(3);
+      if (error) throw error;
+      return data;
+    },
   });
 
   const approvedExpense = (docs ?? [])
@@ -26,6 +38,14 @@ export default function TeamHome() {
 
   return (
     <div className="space-y-4">
+      {notices?.map((n) => (
+        <Card key={n.id} className={n.priority === "important" ? "p-4 bg-red-50 border-red-200" : "p-4 bg-brand-50 border-brand-200"}>
+          <p className="text-[13px] leading-relaxed text-ink-900">
+            <span className="font-bold">{n.priority === "important" ? "📢 중요 공지" : "📢 공지"}</span>{" "}
+            {n.content}
+          </p>
+        </Card>
+      ))}
       {rejected.length > 0 && (
         <Card className="p-4 bg-red-50 border-red-200">
           <p className="text-[13px] font-semibold text-red-700">
@@ -66,6 +86,21 @@ export default function TeamHome() {
           <div className="text-[13px] text-ink-500">승인 대기</div>
           <div className="mt-1 text-xl font-extrabold text-amber-600">{pendingCount}건</div>
         </Card>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <Link to="/team/qna">
+          <Card className="p-4 hover:border-brand-300 transition-colors flex items-center gap-2">
+            <span className="text-xl">💬</span>
+            <span className="text-sm font-bold text-ink-900">Q&A</span>
+          </Card>
+        </Link>
+        <Link to="/team/schedule">
+          <Card className="p-4 hover:border-brand-300 transition-colors flex items-center gap-2">
+            <span className="text-xl">📅</span>
+            <span className="text-sm font-bold text-ink-900">일정</span>
+          </Card>
+        </Link>
       </div>
 
       <Card className="p-5">

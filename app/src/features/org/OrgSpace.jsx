@@ -13,6 +13,7 @@ const NAV = [
   { to: "/org", label: "홈", end: true },
   { to: "/org/approvals", label: "승인" },
   { to: "/org/activity", label: "활동" },
+  { to: "/org/comm", label: "소통" },
   { to: "/org/teams", label: "팀" },
   { to: "/org/programs", label: "사업" },
 ];

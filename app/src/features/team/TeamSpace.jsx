@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "../../lib/supabase.js";
 import { signOut, useAuth } from "../auth/AuthProvider.jsx";
 import { Button, Card, Logo, Spinner } from "../../components/ui/index.jsx";
+import { NotificationsBell } from "./NotificationsBell.jsx";
 import { cn } from "../../lib/cn.js";
 
 const TeamCtx = createContext(null);
@@ -60,9 +61,12 @@ export default function TeamSpace() {
               <div className="text-sm font-bold text-ink-900 truncate leading-tight">{team.name}</div>
               <div className="text-[11px] text-ink-400 truncate leading-tight">{program?.name}</div>
             </div>
-            <Button variant="ghost" size="sm" className="ml-auto" onClick={signOut}>
-              로그아웃
-            </Button>
+            <div className="ml-auto flex items-center gap-1">
+              <NotificationsBell team={team} />
+              <Button variant="ghost" size="sm" onClick={signOut}>
+                로그아웃
+              </Button>
+            </div>
           </div>
           {/* 데스크톱 탭 */}
           <nav className="max-w-3xl mx-auto px-5 hidden sm:flex gap-1">
