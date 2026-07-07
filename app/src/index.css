@@ -1,0 +1,46 @@
+@import "tailwindcss";
+
+@theme {
+  /* 일움 브랜드 — "움트다": 성장의 그린. 영메이커스의 민트 톤 계승 */
+  --color-brand-50: #ecfdf5;
+  --color-brand-100: #d1fae5;
+  --color-brand-200: #a7f3d0;
+  --color-brand-300: #6ee7b7;
+  --color-brand-400: #34d399;
+  --color-brand-500: #10b981;
+  --color-brand-600: #059669;
+  --color-brand-700: #047857;
+  --color-brand-800: #065f46;
+  --color-brand-900: #064e3b;
+
+  /* 잉크(텍스트) — 순수 검정 대신 딥 그레이-그린 */
+  --color-ink-900: #10201b;
+  --color-ink-700: #2e453d;
+  --color-ink-500: #5c7268;
+  --color-ink-400: #8aa096;
+  --color-ink-300: #b7c6bf;
+  --color-ink-200: #dbe5e0;
+  --color-ink-100: #eef3f0;
+  --color-ink-50: #f7faf8;
+
+  --font-sans: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, "Segoe UI", "Malgun Gothic", sans-serif;
+
+  --radius-card: 1rem;
+
+  --shadow-card: 0 1px 2px rgb(16 32 27 / 0.04), 0 4px 16px rgb(16 32 27 / 0.06);
+  --shadow-pop: 0 4px 12px rgb(16 32 27 / 0.08), 0 12px 40px rgb(16 32 27 / 0.12);
+}
+
+html {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  @apply bg-ink-50 text-ink-900;
+}
+
+::selection {
+  @apply bg-brand-200;
+}
