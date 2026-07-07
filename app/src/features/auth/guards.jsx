@@ -27,7 +27,7 @@ export function RequireSpace({ space, children }) {
     space === "console"
       ? roles?.superAdmin
       : space === "org"
-        ? roles?.orgs.length > 0
+        ? roles?.orgs.length > 0 || roles?.superAdmin
         : space === "team"
           ? roles?.teams.length > 0
           : false;

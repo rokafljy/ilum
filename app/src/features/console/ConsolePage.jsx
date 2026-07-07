@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "../../lib/supabase.js";
 import { signOut } from "../auth/AuthProvider.jsx";
@@ -17,6 +18,7 @@ async function fetchOrgs() {
 
 export default function ConsolePage() {
   const qc = useQueryClient();
+  const navigate = useNavigate();
   const { data: orgs, isLoading } = useQuery({ queryKey: ["console-orgs"], queryFn: fetchOrgs });
 
   const [createOpen, setCreateOpen] = useState(false);
@@ -88,7 +90,14 @@ export default function ConsolePage() {
             </Card>
           )}
           {orgs?.map((org) => (
-            <Card key={org.id} className="p-5 flex items-center gap-4">
+            <Card
+              key={org.id}
+              className="p-5 flex items-center gap-4 cursor-pointer hover:border-brand-300 transition-colors"
+              onClick={() => {
+                localStorage.setItem("ilum-console-org", org.id);
+                navigate("/org");
+              }}
+            >
               <div className="size-10 rounded-xl bg-brand-100 text-brand-700 grid place-items-center font-bold">
                 {org.name.slice(0, 1)}
               </div>
@@ -100,10 +109,18 @@ export default function ConsolePage() {
                   </Badge>
                 </div>
                 <p className="mt-0.5 text-[13px] text-ink-500">
-                  구성원 {org.org_members?.[0]?.count ?? 0}명 · 사업 {org.programs?.[0]?.count ?? 0}개
+                  구성원 {org.org_members?.[0]?.count ?? 0}명 · 사업 {org.programs?.[0]?.count ?? 0}개 ·
+                  클릭해서 현황 보기
                 </p>
               </div>
-              <Button variant="secondary" size="sm" onClick={() => setInviteFor(org)}>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setInviteFor(org);
+                }}
+              >
                 담당자 초대
               </Button>
             </Card>

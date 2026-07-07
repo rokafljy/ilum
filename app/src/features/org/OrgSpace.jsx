@@ -1,9 +1,9 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
-import { NavLink, Outlet } from "react-router-dom";
+import { Link, Navigate, NavLink, Outlet } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "../../lib/supabase.js";
 import { signOut, useAuth } from "../auth/AuthProvider.jsx";
-import { Button, Logo, Select, Spinner } from "../../components/ui/index.jsx";
+import { Badge, Button, Logo, Select, Spinner } from "../../components/ui/index.jsx";
 import { cn } from "../../lib/cn.js";
 
 const OrgCtx = createContext(null);
@@ -21,7 +21,24 @@ const NAV = [
 export default function OrgSpace() {
   const { roles } = useAuth();
   const membership = roles?.orgs?.[0]; // v1: 사용자당 1개 기관 가정
-  const org = membership ? { id: membership.org_id, role: membership.role, ...membership.orgs } : null;
+  // 운영사 열람 모드 — 콘솔에서 선택한 기관을 슈퍼관리자가 들여다봄
+  const consoleOrgId = roles?.superAdmin && !membership ? localStorage.getItem("ilum-console-org") : null;
+
+  const { data: consoleOrg, isLoading: consoleOrgLoading } = useQuery({
+    queryKey: ["console-view-org", consoleOrgId],
+    enabled: Boolean(consoleOrgId),
+    queryFn: async () => {
+      const { data, error } = await supabase.from("orgs").select("*").eq("id", consoleOrgId).single();
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const org = membership
+    ? { id: membership.org_id, role: membership.role, ...membership.orgs }
+    : consoleOrg
+      ? { ...consoleOrg, role: "admin", consoleView: true }
+      : null;
 
   const { data: programs, isLoading } = useQuery({
     queryKey: ["org-programs", org?.id],
@@ -53,15 +70,27 @@ export default function OrgSpace() {
     [programs, programId]
   );
 
-  if (!org) return null;
+  if (!org) {
+    if (consoleOrgLoading) {
+      return (
+        <div className="min-h-dvh grid place-items-center"><Spinner className="size-8" /></div>
+      );
+    }
+    return <Navigate to={roles?.superAdmin ? "/console" : "/go"} replace />;
+  }
 
   return (
     <OrgCtx.Provider value={{ org, programs: programs ?? [], program, setProgramId }}>
       <div className="min-h-dvh flex flex-col">
         <header className="border-b border-ink-100 bg-white">
           <div className="max-w-5xl mx-auto px-5 h-14 flex items-center gap-4">
-            <Logo size="sm" />
+            {org.consoleView ? (
+              <Link to="/console" className="text-sm font-semibold text-brand-700 shrink-0">← 콘솔</Link>
+            ) : (
+              <Logo size="sm" />
+            )}
             <span className="text-sm font-semibold text-ink-700 truncate">{org.name}</span>
+            {org.consoleView && <Badge tone="info">운영사 열람</Badge>}
             {programs?.length > 0 && (
               <Select
                 className="!w-auto !h-8 !text-[13px] !rounded-lg max-w-52"
