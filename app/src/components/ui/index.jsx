@@ -78,6 +78,20 @@ export function Input({ className, ...props }) {
   );
 }
 
+export function Textarea({ className, ...props }) {
+  return (
+    <textarea
+      className={cn(
+        "w-full min-h-24 px-3.5 py-2.5 rounded-xl border border-ink-200 bg-white text-[15px] text-ink-900",
+        "placeholder:text-ink-400 transition-shadow resize-y",
+        "focus:outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-100",
+        className
+      )}
+      {...props}
+    />
+  );
+}
+
 export function Field({ label, hint, children }) {
   return (
     <label className="block space-y-1.5">
