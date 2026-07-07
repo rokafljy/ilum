@@ -1,13 +1,17 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import { supabase, supabaseReady } from "../../lib/supabase.js";
 import { Button, Card, Field, Input, Logo } from "../../components/ui/index.jsx";
+import { useAuth } from "./AuthProvider.jsx";
 
 export default function LoginPage() {
+  const { session, booting } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+
+  if (!booting && session) return <Navigate to="/go" replace />;
 
   async function onSubmit(e) {
     e.preventDefault();
