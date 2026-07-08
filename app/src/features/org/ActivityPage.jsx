@@ -8,28 +8,58 @@ import { DocDetail } from "../../components/DocDetail.jsx";
 import { Badge, Button, Card, EmptyState, Modal, Select, Spinner } from "../../components/ui/index.jsx";
 import { cn } from "../../lib/cn.js";
 
-/** PDF 메타(팀장·확인자 등) 구성 */
-async function buildMeta(teamId, org, program) {
-  const { data: team } = await supabase
-    .from("teams")
-    .select("name, team_members(role, profiles(name))")
-    .eq("id", teamId)
-    .single();
+/** PDF 메타 — 서식 서명란·잔액 계산에 필요한 전체 정보 */
+export async function buildMeta(teamId, org, program) {
+  const [{ data: team }, { data: expenseDocs }, { data: planDoc }] = await Promise.all([
+    supabase
+      .from("teams")
+      .select("name, team_members(role, profiles(name))")
+      .eq("id", teamId)
+      .single(),
+    supabase
+      .from("documents")
+      .select("body")
+      .eq("team_id", teamId)
+      .eq("doc_type", "expense_report")
+      .eq("status", "approved"),
+    supabase
+      .from("documents")
+      .select("body")
+      .eq("team_id", teamId)
+      .eq("doc_type", "plan")
+      .limit(1)
+      .maybeSingle(),
+  ]);
   const leader = team?.team_members?.find((m) => m.role === "leader");
+  const members = (team?.team_members ?? [])
+    .filter((m) => m.role !== "leader")
+    .map((m) => m.profiles?.name)
+    .filter(Boolean);
+  const spent = (expenseDocs ?? []).reduce(
+    (s, d) => s + (d.body?.items ?? []).reduce((a, it) => a + (Number(it.amount) || 0), 0),
+    0
+  );
   return {
     orgName: org.name,
     programName: program.name,
+    projectName: planDoc?.body?.projectName || program.name,
     teamName: team?.name ?? "",
     leaderName: leader?.profiles?.name ?? "",
+    memberNames: members,
+    mentorName: planDoc?.body?.mentorName || "",
     checkerName: org.checker_name || org.name,
+    budget: program.settings?.teamBudget ?? 1_800_000,
+    spent,
   };
 }
 
 const TABS = [
-  { key: "meeting", label: "회의록" },
-  { key: "mentoring", label: "멘토링" },
-  { key: "expense_report", label: "지출" },
+  { key: "plan", label: "수행계획" },
   { key: "request", label: "품의서" },
+  { key: "meeting", label: "회의록" },
+  { key: "expense_report", label: "지출" },
+  { key: "mentoring", label: "멘토링" },
+  { key: "final_report", label: "결과보고" },
 ];
 
 /** 활동 관리 — 사업 전체 문서 조회 (팀·유형 필터) */

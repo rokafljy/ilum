@@ -19,6 +19,7 @@ const TeamsPage = lazy(() => import("./features/org/TeamsPage.jsx"));
 const ApprovalsPage = lazy(() => import("./features/org/ApprovalsPage.jsx"));
 const ActivityPage = lazy(() => import("./features/org/ActivityPage.jsx"));
 const CommPage = lazy(() => import("./features/org/CommPage.jsx"));
+const GovReportsPage = lazy(() => import("./features/org/GovReportsPage.jsx"));
 const TeamSpace = lazy(() => import("./features/team/TeamSpace.jsx"));
 const TeamHome = lazy(() => import("./features/team/TeamHome.jsx"));
 const RequestsPage = lazy(() => import("./features/team/RequestsPage.jsx"));
@@ -27,6 +28,7 @@ const MentoringPage = lazy(() => import("./features/team/MentoringPage.jsx"));
 const ExpenseReportsPage = lazy(() => import("./features/team/ExpenseReportsPage.jsx"));
 const QnaPage = lazy(() => import("./features/team/QnaPage.jsx"));
 const SchedulePage = lazy(() => import("./features/team/SchedulePage.jsx"));
+const ProjectDocsPage = lazy(() => import("./features/team/ProjectDocsPage.jsx"));
 
 function PageLoading() {
   return (
@@ -89,6 +91,7 @@ export default function App() {
           <Route path="approvals" element={<ApprovalsPage />} />
           <Route path="activity" element={<ActivityPage />} />
           <Route path="comm" element={<CommPage />} />
+          <Route path="reports" element={<GovReportsPage />} />
           <Route path="teams" element={<TeamsPage />} />
           <Route path="programs" element={<ProgramsPage />} />
         </Route>
@@ -110,6 +113,7 @@ export default function App() {
           <Route path="mentoring" element={<MentoringPage />} />
           <Route path="qna" element={<QnaPage />} />
           <Route path="schedule" element={<SchedulePage />} />
+          <Route path="project" element={<ProjectDocsPage />} />
         </Route>
 
         <Route

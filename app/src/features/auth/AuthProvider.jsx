@@ -29,33 +29,41 @@ async function fetchRoles(session) {
 
 export function AuthProvider({ children }) {
   const [session, setSession] = useState(null);
+  const [sessionReady, setSessionReady] = useState(false); // 초기 세션 복원 완료 여부
   const [roles, setRoles] = useState(null);
-  const [booting, setBooting] = useState(true);
+  const [rolesLoading, setRolesLoading] = useState(true);
 
   useEffect(() => {
     if (!supabaseReady) {
-      setBooting(false);
+      setSessionReady(true);
+      setRolesLoading(false);
       return;
     }
-    supabase.auth.getSession().then(({ data }) => setSession(data.session ?? null));
+    supabase.auth.getSession().then(({ data }) => {
+      setSession(data.session ?? null);
+      setSessionReady(true); // 복원이 끝나기 전에는 booting 유지 → 새로고침 시 /login 튕김 방지
+    });
     const { data: sub } = supabase.auth.onAuthStateChange((_event, s) => setSession(s));
     return () => sub.subscription.unsubscribe();
   }, []);
 
   useEffect(() => {
+    if (!sessionReady) return;
     let alive = true;
     (async () => {
-      setBooting(true);
+      setRolesLoading(true);
       const r = await fetchRoles(session);
       if (alive) {
         setRoles(r);
-        setBooting(false);
+        setRolesLoading(false);
       }
     })();
     return () => {
       alive = false;
     };
-  }, [session]);
+  }, [session, sessionReady]);
+
+  const booting = !sessionReady || rolesLoading;
 
   /** 소속 변경(초대 수락·팀 등록) 직후 호출 — 완료를 기다릴 수 있음 */
   const refreshRoles = useCallback(async () => {

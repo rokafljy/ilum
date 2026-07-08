@@ -18,14 +18,14 @@ async function waitImages(el, timeout = 8000) {
   ]);
 }
 
-/** 문서 → PDF Blob (숨김 렌더 → 캡처 → A4 페이지 분할) */
-export async function docToPdfBlob(doc, meta) {
+/** React 요소 → PDF Blob (숨김 렌더 → 캡처 → A4 페이지 분할) */
+export async function elementToPdfBlob(reactElement) {
   const host = document.createElement("div");
   host.style.cssText = "position:fixed;left:-12000px;top:0;width:794px;background:#fff;z-index:-1;";
   document.body.appendChild(host);
   const root = createRoot(host);
   try {
-    root.render(createElement(FormalDoc, { doc, meta }));
+    root.render(reactElement);
     await new Promise((r) => setTimeout(r, 350));
     await waitImages(host);
     await document.fonts?.ready;
@@ -53,7 +53,12 @@ export async function docToPdfBlob(doc, meta) {
   }
 }
 
-function triggerDownload(blob, filename) {
+/** 문서 → PDF Blob (정부 서식 렌더) */
+export function docToPdfBlob(doc, meta) {
+  return elementToPdfBlob(createElement(FormalDoc, { doc, meta }));
+}
+
+export function triggerDownload(blob, filename) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;

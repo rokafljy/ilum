@@ -15,6 +15,7 @@ const NAV = [
   { to: "/org/activity", label: "활동" },
   { to: "/org/comm", label: "소통" },
   { to: "/org/teams", label: "팀" },
+  { to: "/org/reports", label: "보고" },
   { to: "/org/programs", label: "사업" },
 ];
 

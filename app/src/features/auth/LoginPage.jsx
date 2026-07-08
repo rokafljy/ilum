@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, Navigate, useSearchParams } from "react-router-dom";
+import { Link, Navigate, useLocation, useSearchParams } from "react-router-dom";
 import { supabase, supabaseReady } from "../../lib/supabase.js";
 import { Button, Card, Field, Input, Logo } from "../../components/ui/index.jsx";
 import { useAuth } from "./AuthProvider.jsx";
@@ -7,7 +7,8 @@ import { useAuth } from "./AuthProvider.jsx";
 export default function LoginPage() {
   const { session, booting } = useAuth();
   const [params] = useSearchParams();
-  const next = params.get("next") || "/go";
+  const location = useLocation();
+  const next = params.get("next") || location.state?.from || "/go";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);

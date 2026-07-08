@@ -16,8 +16,16 @@
 - PowerShell `Get-Content`/`Set-Content`로 한글 파일 읽어서 다시 쓰는 일괄 변환 절대 금지 (2026-05 UTF-8 손상 사고).
 - 파일 수정은 **Edit/Write 도구** 또는 **Node.js `fs`(utf8 명시)**만 사용.
 
-### 3. 아직 코드 단계 아님
-- 현재 단계: **기획 (docs/)**. PRD·스키마 설계가 확정되기 전에 앱 코드를 만들지 말 것.
+### 3. 정부 서식·지침이 헌법 🔴 (2026-07-07 대표 지시)
+- 팀 작성 서식(품의서·지출결과서·회의록 등)은 **정부 지정 서식 그대로** 구현 — 임의 서식 생성 금지.
+- 시행지침(집행 한도·절차·보고 기한)에 어긋나는 로직 금지. 매핑표: `docs/04-정부서식-매핑.md`
+- 원본 PDF: `C:\Users\NT751\Documents\01.2026년 미래내일\10.서식 및 규정\` (서식 v1 + 시행지침)
+
+### 4. 현재 상태 (2026-07-07 밤 기준)
+- v1 전 기능 개발·검증 완료 + 정부 서식 전면 재작업 완료. 배포: https://ilum-dev.2jaeyong.workers.dev
+- 개발 이력·계정·인프라는 docs/ 및 git log 참조. 테스트 계정 비번 `IlumTest!2026` (super/orgadmin/leader/member @gmail.com — ilum.test.*)
+- DB 마이그레이션: `cd scripts && node db.mjs <파일|SQL>` (.env의 DATABASE_URL, git 제외)
+- 배포: `cd app && npm run build && npx wrangler deploy`
 
 ---
 

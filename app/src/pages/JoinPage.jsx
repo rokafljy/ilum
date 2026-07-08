@@ -20,12 +20,17 @@ export default function JoinPage() {
   const navigate = useNavigate();
   const [mode, setMode] = useState("leader"); // leader | member
   const [form, setForm] = useState({ joinCode: "", teamName: "", companyName: "", inviteCode: "" });
+  const [pledged, setPledged] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
 
   async function submit(e) {
     e.preventDefault();
+    if (!pledged) {
+      setError("참여자 서약에 동의해야 시작할 수 있어요.");
+      return;
+    }
     setBusy(true);
     setError("");
     const isLeader = mode === "leader";
@@ -105,6 +110,15 @@ export default function JoinPage() {
               />
             </Field>
           )}
+          <label className="flex items-start gap-2 rounded-xl bg-ink-50 p-3 text-[12px] text-ink-600 leading-relaxed cursor-pointer">
+            <input type="checkbox" className="mt-0.5 size-4 accent-brand-600 shrink-0"
+              checked={pledged} onChange={(e) => setPledged(e.target.checked)} />
+            <span>
+              <b className="text-ink-900">참여자 서약 (서식 119-2)</b> — 본인은 팀 단위 프로젝트 수행과 결과물 도출에
+              성실히 참여하며, 대리참여·무단이탈 등 부정한 방법으로 참여하지 않고, 정부지원금 중복 참여·지원이
+              없음을 서약합니다. 취업 시 즉시 운영기관에 고지하겠습니다.
+            </span>
+          </label>
           {error && <p className="text-sm text-red-600">{error}</p>}
           <Button type="submit" size="lg" className="w-full" disabled={busy}>
             {busy ? "처리 중…" : mode === "leader" ? "팀 등록 신청" : "팀 합류하기"}

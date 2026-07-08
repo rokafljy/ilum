@@ -88,6 +88,17 @@ export default function TeamHome() {
         </Card>
       </div>
 
+      <Link to="/team/project">
+        <Card className="p-4 hover:border-brand-300 transition-colors flex items-center gap-3">
+          <span className="text-2xl">🗺️</span>
+          <div className="min-w-0 flex-1">
+            <div className="text-sm font-bold text-ink-900">프로젝트 문서</div>
+            <div className="text-[12px] text-ink-500">수행계획서(서식 20) · 결과보고서(서식 21)</div>
+          </div>
+          <span className="text-ink-300">›</span>
+        </Card>
+      </Link>
+
       <div className="grid grid-cols-2 gap-3">
         <Link to="/team/qna">
           <Card className="p-4 hover:border-brand-300 transition-colors flex items-center gap-2">
