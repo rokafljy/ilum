@@ -43,10 +43,14 @@ export function AuthProvider({ children }) {
       setSession(data.session ?? null);
       setSessionReady(true); // 복원이 끝나기 전에는 booting 유지 → 새로고침 시 /login 튕김 방지
     });
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, s) => setSession(s));
+    // 같은 사용자의 토큰 갱신·포커스 이벤트는 무시 — 페이지 리마운트(작성중 모달 소실) 방지
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, s) =>
+      setSession((prev) => (prev?.user?.id === s?.user?.id ? prev : s))
+    );
     return () => sub.subscription.unsubscribe();
   }, []);
 
+  const uid = session?.user?.id ?? null;
   useEffect(() => {
     if (!sessionReady) return;
     let alive = true;
@@ -61,7 +65,8 @@ export function AuthProvider({ children }) {
     return () => {
       alive = false;
     };
-  }, [session, sessionReady]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [uid, sessionReady]);
 
   const booting = !sessionReady || rolesLoading;
 
